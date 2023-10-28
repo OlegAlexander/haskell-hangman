@@ -1,0 +1,26 @@
+cabal-version:      3.0
+name:               haskell-hangman
+version:            0.1.0.0
+synopsis:           Hangman game.
+-- description:
+license:            MIT
+license-file:       LICENSE
+author:             Oleg Alexander
+maintainer:         ""
+-- copyright:
+category:           Game
+build-type:         Simple
+extra-doc-files:    CHANGELOG.md
+-- extra-source-files:
+
+common warnings
+    ghc-options: -Wall
+
+executable haskell-hangman
+    import:           warnings
+    main-is:          Main.hs
+    -- other-modules:
+    -- other-extensions:
+    build-depends:    containers, base ^>=4.17.2.0
+    hs-source-dirs:   app
+    default-language: Haskell2010
