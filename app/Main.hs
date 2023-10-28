@@ -1,4 +1,4 @@
-{-# LANGUAGE Strict #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module Main where
 
@@ -97,17 +97,16 @@ pics =
 
 data Outcome = Lose | Win | AlreadyGuessed | GoodGuess | BadGuess deriving Show
 
-type SecretWord = String
 
-type GoodGuesses = Set.Set Char
-
-type BadGuesses = Set.Set Char
-
-data GameState = GameState SecretWord GoodGuesses BadGuesses deriving Show
+data GameState = GameState {
+     secretWord  :: String,
+     goodGuesses :: Set.Set Char,
+     badGuesses  :: Set.Set Char
+   } deriving Show
 
 
 getOutcome :: GameState -> Char -> Outcome
-getOutcome (GameState secretWord goodGuesses badGuesses) guess
+getOutcome GameState {..} guess
     | guess `Set.member` (badGuesses `Set.union` goodGuesses) = AlreadyGuessed
     | Set.insert guess goodGuesses == Set.fromList secretWord = Win
     | not (guess `Set.member` Set.fromList secretWord)
@@ -120,15 +119,15 @@ showPic :: Int -> String
 showPic i = unlines $ pics !! i
 
 
-match :: Foldable t => [Char] -> t Char -> [Char]
-match word goodGuesses = map (\c -> if c `elem` goodGuesses then c else '-') word
+match :: String -> String -> String
+match secretWord goodGuesses = map (\c -> if c `elem` goodGuesses then c else '-') secretWord
 
 
 showState :: GameState -> IO ()
-showState (GameState secretWord goodGuesses badGuesses) = do
+showState GameState {..} = do
     putStrLn ""
     putStrLn $ showPic $ Set.size badGuesses
-    putStrLn $ match secretWord goodGuesses ++ "  |  " ++ Set.toList badGuesses
+    putStrLn $ match secretWord (Set.toList goodGuesses) ++ "  |  " ++ Set.toList badGuesses
 
 
 safeHead :: [a] -> Maybe a
@@ -148,29 +147,29 @@ getGuess = do
 
 
 play :: GameState -> IO ()
-play (GameState secretWord goodGuesses badGuesses) = do
+play gameState@GameState {..} = do
     guess <- getGuess
-    let outcome = getOutcome (GameState secretWord goodGuesses badGuesses) guess
+    let outcome = getOutcome gameState guess
     case outcome of
         Lose -> do
-            showState (GameState secretWord goodGuesses (Set.insert guess badGuesses))
+            showState gameState {badGuesses = Set.insert guess badGuesses}
             putStrLn "\nYou lose!"
             putStrLn $ "The word was: " ++ secretWord
         Win -> do
-            showState (GameState secretWord (Set.insert guess goodGuesses) badGuesses)
+            showState gameState {goodGuesses = Set.insert guess goodGuesses}
             putStrLn "\nYou win!"
         AlreadyGuessed -> do
-            showState (GameState secretWord goodGuesses badGuesses)
+            showState gameState
             putStrLn "\nYou already guessed that letter."
-            play (GameState secretWord goodGuesses badGuesses)
+            play gameState
         GoodGuess -> do
-            showState (GameState secretWord (Set.insert guess goodGuesses) badGuesses)
+            showState gameState {goodGuesses = Set.insert guess goodGuesses}
             putStrLn "\nCorrect."
-            play (GameState secretWord (Set.insert guess goodGuesses) badGuesses)
+            play gameState {goodGuesses = Set.insert guess goodGuesses}
         BadGuess -> do
-            showState (GameState secretWord goodGuesses (Set.insert guess badGuesses))
+            showState gameState{badGuesses = Set.insert guess badGuesses}
             putStrLn "\nIncorrect."
-            play (GameState secretWord goodGuesses (Set.insert guess badGuesses))
+            play gameState {badGuesses = Set.insert guess badGuesses}
 
 
 -- Source: https://stackoverflow.com/a/62317066
@@ -183,9 +182,9 @@ hangman :: IO ()
 hangman = do
     putStrLn "\n===HANGMAN==="
     putStrLn "\nPlayer 1: Enter a word: "
-    word <- map toUpper <$> withoutEcho getLine
+    secretWord <- map toUpper <$> withoutEcho getLine
     putStrLn "\nPlayer 2: Try to guess it!"
-    play (GameState word Set.empty Set.empty)
+    play GameState {secretWord=secretWord, goodGuesses=Set.empty, badGuesses=Set.empty}
 
 
 main :: IO ()
