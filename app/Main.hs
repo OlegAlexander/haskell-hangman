@@ -6,93 +6,8 @@ module Main where
 import           Control.Exception (finally)
 import           Data.Char         (toUpper)
 import qualified Data.Set          as Set
+import           Pics              (pics, showPic)
 import           System.IO         (hSetEcho, stdin)
-
-
-
-pics :: [[String]]
-pics =
-    [   [ "       ",
-          "       ",
-          "       ",
-          "       ",
-          "       ",
-          "       ",
-          "========="
-        ],
-        [ "      +",
-          "      |",
-          "      |",
-          "      |",
-          "      |",
-          "      |",
-          "========="
-        ],
-        [ "  +---+",
-          "      |",
-          "      |",
-          "      |",
-          "      |",
-          "      |",
-          "========="
-        ],
-        [ "  +---+",
-          "  |   |",
-          "      |",
-          "      |",
-          "      |",
-          "      |",
-          "========="
-        ],
-        [ "  +---+",
-          "  |   |",
-          "  O   |",
-          "      |",
-          "      |",
-          "      |",
-          "========="
-        ],
-        [ "  +---+",
-          "  |   |",
-          "  O   |",
-          "  |   |",
-          "      |",
-          "      |",
-          "========="
-        ],
-        [ "  +---+",
-          "  |   |",
-          "  O   |",
-          " /|   |",
-          "      |",
-          "      |",
-          "========="
-        ],
-        [ "  +---+",
-          "  |   |",
-          "  O   |",
-          " /|\\  |",
-          "      |",
-          "      |",
-          "========="
-        ],
-        [ "  +---+",
-          "  |   |",
-          "  O   |",
-          " /|\\  |",
-          " /    |",
-          "      |",
-          "========="
-        ],
-        [ "  +---+",
-          "  |   |",
-          "  O   |",
-          " /|\\  |",
-          " / \\  |",
-          "      |",
-          "========="
-        ]
-    ]
 
 
 data Outcome = Lose | Win | AlreadyGuessed | GoodGuess | BadGuess deriving Show
@@ -115,12 +30,9 @@ getOutcome GameState {..} guess
     | otherwise = BadGuess
 
 
-showPic :: Int -> String
-showPic i = unlines $ pics !! i
-
-
 match :: String -> String -> String
-match secretWord goodGuesses = map (\c -> if c `elem` goodGuesses then c else '-') secretWord
+match secretWord goodGuesses =
+    map (\c -> if c `elem` goodGuesses then c else '-') secretWord
 
 
 showState :: GameState -> IO ()
@@ -174,18 +86,13 @@ play gameState@GameState {..} = do
 
 -- Source: https://stackoverflow.com/a/62317066
 withoutEcho :: IO a -> IO a
-withoutEcho action =
-  finally (hSetEcho stdin False >> action) (hSetEcho stdin True)
+withoutEcho action = finally (hSetEcho stdin False >> action) (hSetEcho stdin True)
 
 
-hangman :: IO ()
-hangman = do
+main :: IO ()
+main = do
     putStrLn "\n===HANGMAN==="
     putStrLn "\nPlayer 1: Enter a word: "
     secretWord <- map toUpper <$> withoutEcho getLine
     putStrLn "\nPlayer 2: Try to guess it!"
     play GameState {secretWord=secretWord, goodGuesses=Set.empty, badGuesses=Set.empty}
-
-
-main :: IO ()
-main = hangman

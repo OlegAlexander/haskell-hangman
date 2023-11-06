@@ -19,7 +19,7 @@ common warnings
 executable haskell-hangman
     import:           warnings
     main-is:          Main.hs
-    -- other-modules:
+    other-modules:    Pics
     -- other-extensions:
     build-depends:    containers, base ^>=4.17.2.0
     hs-source-dirs:   app
